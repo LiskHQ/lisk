@@ -16,6 +16,8 @@
 
 import { hash } from '@liskhq/lisk-cryptography';
 import { dataStructures } from '@liskhq/lisk-utils';
+import { hash } from '../../../lisk-cryptography/dist-node';
+import { calculatePathNodes } from './calculate';
 import {
 	LAYER_INDEX_SIZE,
 	NODE_INDEX_SIZE,
@@ -28,13 +30,16 @@ import {
 } from './constants';
 import { InMemoryDB } from './inmemory_db';
 import { PrefixStore } from './prefix_store';
-import { NodeData, NodeInfo, NodeType, NodeSide, Proof, Database } from './types';
+import { NodeData, NodeInfo, NodeType, NodeSide, Proof, Database, NodeLocation, SiblingHash, NodeIndex, NonNullableStruct } from './types';
 import {
 	generateHash,
 	getBinaryString,
 	isLeaf,
 	getPairLocation,
 	getRightSiblingInfo,
+	getParentLocation,
+	buildLeaf,
+	buildBranch,
 } from './utils';
 
 export class MerkleTree {
@@ -267,6 +272,134 @@ export class MerkleTree {
 		return rightWitness;
 	}
 
+
+	public async getSiblingHashes(idxs: ReadonlyArray<NodeIndex>): Promise<SiblingHash[]> {
+		if (this._size === 0) {
+			return []
+		}
+
+		const sortedIndexes = idxs.map(idx => ({ ...idx }));
+		// Remove empty indexes
+		for (let  i = 0; i < sortedIndexes.length; i += 1) {
+			const index = sortedIndexes[i];
+			if (index.layerIndex === undefined || index.nodeIndex === undefined) {
+				sortedIndexes[i] = sortedIndexes[sortedIndexes.length - 1]
+				sortedIndexes.pop();
+			}
+		}
+		// Indexes must be ordered from bottom-left to top-right
+		(sortedIndexes as NonNullableStruct<NodeIndex>[]).sort((a: NonNullableStruct<NodeIndex>, b: NonNullableStruct<NodeIndex>) => {
+			if (a.layerIndex !== b.layerIndex) return a.layerIndex - b.layerIndex;
+			return a.nodeIndex - b.nodeIndex;
+		});
+
+		const indexes: Record<string, NodeLocation> = {};
+		for (const index of (sortedIndexes as NonNullableStruct<NodeIndex>[])) {
+			const binaryIndex = getBinaryString(index.nodeIndex, this._getHeight() - index.layerIndex).toString();
+			indexes[binaryIndex] = index;
+		}
+
+		const siblingHashes = [];
+		let currentNode: NodeInfo | undefined;
+		let currentNodeHash = Buffer.alloc(0);
+
+		while(!(Object.keys(indexes)[0] === undefined)) {
+			const currentLocation = indexes[Object.keys(indexes)[0]];
+			const {
+				nodeIndex: currentNodeIndex,
+				layerIndex: currentLayerIndex,
+			} = currentLocation;
+			const binaryIndex = getBinaryString(currentNodeIndex, this._getHeight() - currentLayerIndex).toString();
+
+			try {
+				currentNodeHash = (await this._locationToHashMap.get(
+					getBinaryString(currentNodeIndex, this._getHeight() - currentLayerIndex),
+				)) as Buffer;
+				currentNode = await this.getNode(currentNodeHash);
+			} catch (err) {
+				delete indexes[binaryIndex];
+				continue;
+			}
+
+			const {
+				layerIndex: pairLayerIndex,
+				nodeIndex: pairNodeIndex,
+			} = getPairLocation({
+				layerIndex: currentNode.layerIndex,
+				nodeIndex: currentNode.nodeIndex,
+				size: this._size,
+			});
+			const pairNodeLocation: NodeLocation = {
+				layerIndex: pairLayerIndex,
+				nodeIndex: pairNodeIndex,
+			};
+
+			const pairBinaryIndex = getBinaryString(pairNodeIndex, this._getHeight() - pairLayerIndex).toString();
+
+			const pairNodeHash = (await this._locationToHashMap.get(
+				getBinaryString(pairNodeIndex, this._getHeight() - pairLayerIndex),
+			)) as Buffer;
+
+			if (indexes[pairBinaryIndex]) {
+				delete indexes[pairBinaryIndex];
+			} else {
+				siblingHashes.push({
+					hash: pairNodeHash,
+					layerIndex: pairLayerIndex,
+					nodeIndex: pairNodeIndex,
+				});
+			}
+
+			delete indexes[binaryIndex];
+
+			const parentIndex: NodeLocation = getParentLocation(currentLocation, pairNodeLocation);
+			const {
+				layerIndex: parentLayerIndex,
+				nodeIndex: parentNodeIndex,
+			} = parentIndex;
+			const parentBinaryIndex = getBinaryString(parentNodeIndex, this._getHeight() - parentLayerIndex).toString();
+
+			if (parentBinaryIndex !== '0') {
+				indexes[parentBinaryIndex] = parentIndex;
+			}
+		}
+
+		return siblingHashes;
+	}
+
+	public async update(idxs: ReadonlyArray<NodeIndex>, updateData: ReadonlyArray<Buffer>) {
+		const updateHashes = [];
+
+		for (const data of updateData) {
+			const leafValueWithoutNodeIndex = Buffer.concat(
+				[LEAF_PREFIX, data],
+				LEAF_PREFIX.length + data.length,
+			);
+			const leafHash = hash(leafValueWithoutNodeIndex);
+			updateHashes.push(leafHash);
+		}
+
+		const pairHashes = await this.getSiblingHashes(idxs);
+		const calculatedTree = calculatePathNodes(updateHashes, this._size, idxs, pairHashes);
+		
+		for (const [binaryIndex, updatedNode] of Object.entries(calculatedTree)) {
+			if (binaryIndex !== '0') {
+				const existingHash = await this._locationToHashMap.get(
+					getBinaryString(updatedNode.nodeIndex, this._getHeight() - updatedNode.layerIndex),
+				);
+				await this._hashToValueMap.set(existingHash as Buffer, updatedNode.value);
+				await this._locationToHashMap.set(
+					getBinaryString(updatedNode.nodeIndex, this._getHeight() - updatedNode.layerIndex),
+					updatedNode.hash,
+				);
+			}
+		}
+
+		const calculatedRoot = calculatedTree['0'].hash;
+
+		return calculatedRoot;
+	}
+
 	public async toString(): Promise<string> {
 		if (this._size === 0) {
 			return this.root.toString('hex');
@@ -279,19 +412,10 @@ export class MerkleTree {
 	}
 
 	private async _generateLeaf(value: Buffer, nodeIndex: number): Promise<NodeData> {
-		const nodeIndexBuffer = Buffer.alloc(NODE_INDEX_SIZE);
-		nodeIndexBuffer.writeInt32BE(nodeIndex, 0);
-		// As per protocol nodeIndex is not included in hash
-		const leafValueWithoutNodeIndex = Buffer.concat(
-			[LEAF_PREFIX, value],
-			LEAF_PREFIX.length + value.length,
-		);
-		const leafHash = this._preHashedLeaf ? value : hash(leafValueWithoutNodeIndex);
-		// We include nodeIndex into the value to allow for nodeIndex retrieval for leaf nodes
-		const leafValueWithNodeIndex = Buffer.concat(
-			[LEAF_PREFIX, nodeIndexBuffer, value],
-			LEAF_PREFIX.length + nodeIndexBuffer.length + value.length,
-		);
+		const {
+			leafValueWithNodeIndex,
+			leafHash,
+		} = buildLeaf(value, nodeIndex, this._preHashedLeaf);
 		await this._hashToValueMap.set(leafHash, leafValueWithNodeIndex);
 		await this._locationToHashMap.set(getBinaryString(nodeIndex, this._getHeight()), leafHash);
 
@@ -307,25 +431,22 @@ export class MerkleTree {
 		layerIndex: number,
 		nodeIndex: number,
 	): Promise<NodeData> {
-		const layerIndexBuffer = Buffer.alloc(LAYER_INDEX_SIZE);
-		const nodeIndexBuffer = Buffer.alloc(NODE_INDEX_SIZE);
-		layerIndexBuffer.writeInt8(layerIndex, 0);
-		nodeIndexBuffer.writeInt32BE(nodeIndex, 0);
-
-		const branchValue = Buffer.concat(
-			[BRANCH_PREFIX, layerIndexBuffer, nodeIndexBuffer, leftHashBuffer, rightHashBuffer],
-			BRANCH_PREFIX.length +
-				layerIndexBuffer.length +
-				nodeIndexBuffer.length +
-				leftHashBuffer.length +
-				rightHashBuffer.length,
+		const {
+			branchHash,
+			branchValue,
+		} = buildBranch(
+			leftHashBuffer,
+			rightHashBuffer,
+			layerIndex,
+			nodeIndex,
 		);
-		const branchHash = generateHash(BRANCH_PREFIX, leftHashBuffer, rightHashBuffer);
+
 		await this._hashToValueMap.set(branchHash, branchValue);
 		await this._locationToHashMap.set(
 			getBinaryString(nodeIndex, this._getHeight() - layerIndex),
 			branchHash,
 		);
+
 		return {
 			hash: branchHash,
 			value: branchValue,

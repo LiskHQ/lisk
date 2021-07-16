@@ -11,6 +11,7 @@
  *
  * Removal or modification of this copyright notice is prohibited.
  */
+export type NonNullableStruct<T> = { [P in keyof T]: NonNullable<T[P]>; };
 
 export const enum NodeType {
 	BRANCH = 'branch',
@@ -30,6 +31,12 @@ export interface NodeInfo {
 	readonly nodeIndex: number;
 }
 
+export interface NodeHash {
+	hash: Buffer;
+	layerIndex: number | undefined;
+	nodeIndex: number | undefined;
+}
+
 export const enum NodeSide {
 	LEFT = 0,
 	RIGHT,
@@ -37,6 +44,12 @@ export const enum NodeSide {
 export interface TreeStructure {
 	[key: number]: NodeInfo[];
 }
+
+export interface NodeIndex {
+	layerIndex: number | undefined;
+	nodeIndex: number | undefined;
+}
+
 export interface Proof {
 	readonly siblingHashes: ReadonlyArray<{
 		hash: Buffer;
@@ -54,6 +67,12 @@ export interface NodeLocation {
 	readonly layerIndex: number;
 	readonly nodeIndex: number;
 	readonly side?: NodeSide;
+}
+
+export interface SiblingHash {
+	hash: Buffer;
+	layerIndex: number;
+	nodeIndex: number;
 }
 
 export type VerifyResult = ReadonlyArray<{ hash: Buffer; verified: boolean }>;
