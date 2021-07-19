@@ -15,7 +15,7 @@ import { KVStore, formatInt, getFirstPrefix, getLastPrefix, NotFoundError } from
 import { codec } from '@liskhq/lisk-codec';
 import { getAddressFromPublicKey, hash } from '@liskhq/lisk-cryptography';
 import { RawBlock, StateDiff } from '../types';
-import { StateStore } from '../state_store';
+import { StateStore } from '../state_store_v1';
 
 import {
 	DB_KEY_BLOCKS_ID,

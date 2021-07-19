@@ -3703,6 +3703,13 @@
     "@types/node" "*"
     "@types/vinyl" "*"
 
+"@types/memdown@3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@types/memdown/-/memdown-3.0.0.tgz#2d909cb507afd341e3132d77dafa213347e47455"
+  integrity sha512-3VlN94b29j7/9XPGfy1kTPmyA5YfFiC0miQRpOCbCJOALy2ejM2IzgDB7fIBTYyf2isr1r8h3qbZmT/1RsCP9Q==
+  dependencies:
+    "@types/abstract-leveldown" "*"
+
 "@types/mime@*":
   version "2.0.2"
   resolved "https://registry.yarnpkg.com/@types/mime/-/mime-2.0.2.tgz#857a118d8634c84bba7ae14088e4508490cd5da5"
@@ -12213,6 +12220,11 @@ lru-cache@^6.0.0:
   dependencies:
     yallist "^4.0.0"
 
+ltgt@^2.2.0:
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/ltgt/-/ltgt-2.2.1.tgz#f35ca91c493f7b73da0e07495304f17b31f87ee5"
+  integrity sha1-81ypHEk/e3PaDgdJUwTxezH4fuU=
+
 magic-string@^0.25.0, magic-string@^0.25.7:
   version "0.25.7"
   resolved "https://registry.yarnpkg.com/magic-string/-/magic-string-0.25.7.tgz#3f497d6fd34c669c6798dcb821f2ef31f5445051"
@@ -12353,6 +12365,17 @@ media-typer@0.3.0:
   dependencies:
     vinyl "^2.0.1"
     vinyl-file "^3.0.0"
+
+memdown@6.0.0:
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/memdown/-/memdown-6.0.0.tgz#4d0afeeea7aca0d3d75d4f89d5f51acf6a8e8387"
+  integrity sha512-ryMNxH7h/aU+nMgxkeQAsZIIPxoDYAPwMJa2hbKerOJEIkU0E4JNVR8ExJQJ4K9C2ZO5lU1GivX9bYHhkGKxtQ==
+  dependencies:
+    abstract-leveldown "^7.0.0"
+    buffer "^6.0.3"
+    functional-red-black-tree "^1.0.1"
+    inherits "^2.0.1"
+    ltgt "^2.2.0"
 
 memoize-one@^5.0.0:
   version "5.1.1"

@@ -13,7 +13,7 @@
  */
 import { KVStore, BatchChain } from '@liskhq/lisk-db';
 import { when } from 'jest-when';
-import { StateStore } from '../../../src/state_store';
+import { StateStore } from '../../../src/state_store_v1';
 import { BlockHeader, StateDiff } from '../../../src/types';
 import { DataAccess } from '../../../src/data_access';
 import { defaultAccount, defaultAccountSchema } from '../../utils/account';

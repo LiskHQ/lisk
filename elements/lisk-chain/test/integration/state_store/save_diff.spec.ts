@@ -25,7 +25,7 @@ import {
 } from '../../utils/account';
 import { DataAccess } from '../../../src/data_access';
 import { registeredBlockHeaders } from '../../utils/block';
-import { StateStore } from '../../../src/state_store';
+import { StateStore } from '../../../src/state_store_v1';
 import { Account } from '../../../src/types';
 import {
 	DB_KEY_DIFF_STATE,

@@ -12,5 +12,8 @@
  * Removal or modification of this copyright notice is prohibited.
  */
 
-export { NotFoundError } from './errors';
-export { StateStore, IterationOptions } from './state_store';
+export const copyBuffer = (value: Buffer): Buffer => {
+	const copiedValue = Buffer.alloc(value.length);
+	value.copy(copiedValue);
+	return copiedValue;
+};

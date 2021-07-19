@@ -13,7 +13,7 @@
  */
 
 import { KVStore } from '@liskhq/lisk-db';
-import { StateStore } from '../../src/state_store';
+import { StateStore } from '../../src/state_store_v1';
 import { DataAccess } from '../../src/data_access';
 import { defaultAccountSchema, defaultAccount } from './account';
 import { registeredBlockHeaders, defaultNetworkIdentifier } from './block';

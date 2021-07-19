@@ -38,6 +38,7 @@
 	"dependencies": {
 		"debug": "4.3.1",
 		"levelup": "4.4.0",
+		"memdown": "6.0.0",
 		"rocksdb": "4.1.0"
 	},
 	"devDependencies": {
@@ -46,6 +47,7 @@
 		"@types/jest": "26.0.21",
 		"@types/jest-when": "2.7.2",
 		"@types/levelup": "4.3.0",
+		"@types/memdown": "3.0.0",
 		"@types/node": "12.20.6",
 		"@types/rocksdb": "3.0.0",
 		"@typescript-eslint/eslint-plugin": "4.19.0",

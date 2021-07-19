@@ -18,7 +18,7 @@ import { BlockHeader, Block, RawBlock, Account, BlockHeaderAsset } from '../type
 
 import { BlockCache } from './cache';
 import { Storage as StorageAccess } from './storage';
-import { StateStore } from '../state_store';
+import { StateStore } from '../state_store_v1';
 import { BlockHeaderInterfaceAdapter } from './block_header_interface_adapter';
 import { blockSchema } from '../schema';
 import { DB_KEY_ACCOUNTS_ADDRESS } from './constants';

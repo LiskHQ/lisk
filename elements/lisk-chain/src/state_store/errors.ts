@@ -12,5 +12,8 @@
  * Removal or modification of this copyright notice is prohibited.
  */
 
-export { NotFoundError } from './errors';
-export { StateStore, IterationOptions } from './state_store';
+export class NotFoundError extends Error {
+	public constructor(key: Buffer) {
+		super(`Specified key ${key.toString('hex')} does not exist`);
+	}
+}

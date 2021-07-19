@@ -28,7 +28,7 @@ import {
 } from './constants';
 import { DataAccess } from './data_access';
 import { Slots } from './slots';
-import { StateStore } from './state_store';
+import { StateStore } from './state_store_v1';
 import {
 	Block,
 	BlockHeader,

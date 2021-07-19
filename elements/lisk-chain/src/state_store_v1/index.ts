@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Lisk Foundation
+ * Copyright © 2019 Lisk Foundation
  *
  * See the LICENSE file at the top-level directory of this distribution
  * for licensing information.
@@ -12,5 +12,4 @@
  * Removal or modification of this copyright notice is prohibited.
  */
 
-export { NotFoundError } from './errors';
-export { StateStore, IterationOptions } from './state_store';
+export { StateStore } from './state_store';

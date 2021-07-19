@@ -12,5 +12,15 @@
  * Removal or modification of this copyright notice is prohibited.
  */
 
-export { NotFoundError } from './errors';
-export { StateStore, IterationOptions } from './state_store';
+import { ReadStreamOptions } from '@liskhq/lisk-db';
+
+export interface DatabaseReader {
+	get: (key: Buffer) => Promise<Buffer>;
+	exists: (key: Buffer) => Promise<boolean>;
+	createReadStream: (options?: ReadStreamOptions) => NodeJS.ReadableStream;
+}
+
+export interface DatabaseWriter {
+	put: (key: Buffer, value: Buffer) => void;
+	del: (key: Buffer) => void;
+}
