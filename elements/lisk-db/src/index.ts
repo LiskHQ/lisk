@@ -12,6 +12,8 @@
  * Removal or modification of this copyright notice is prohibited.
  */
 
-export * from './kv_store';
+export { KVStore } from './kv_store';
+export { InMemoryKVStore } from './in_memory_kv_store';
 export * from './errors';
 export * from './utils';
+export * from './types';

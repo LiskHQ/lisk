@@ -14,7 +14,7 @@
 import { KVStore, BatchChain } from '@liskhq/lisk-db';
 import { when } from 'jest-when';
 import { dataStructures } from '@liskhq/lisk-utils';
-import { StateStore } from '../../../src/state_store';
+import { StateStore } from '../../../src/state_store_v1';
 import { DataAccess } from '../../../src/data_access';
 import { BlockHeader, StateDiff } from '../../../src/types';
 import { defaultAccount, defaultAccountSchema } from '../../utils/account';

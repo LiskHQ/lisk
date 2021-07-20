@@ -26,7 +26,7 @@ import {
 	registeredBlockHeaders,
 } from '../utils/block';
 import { Chain } from '../../src/chain';
-import { StateStore } from '../../src/state_store';
+import { StateStore } from '../../src/state_store_v1';
 import { DataAccess } from '../../src/data_access';
 import { defaultAccountModules, defaultAccountSchema, defaultAccount } from '../utils/account';
 import { Block, BlockHeader, GenesisBlock, Validator } from '../../src/types';

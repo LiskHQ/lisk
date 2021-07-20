@@ -18,7 +18,7 @@ import { KVStore, NotFoundError, formatInt } from '@liskhq/lisk-db';
 import { codec } from '@liskhq/lisk-codec';
 import { getRandomBytes } from '@liskhq/lisk-cryptography';
 import { Chain } from '../../src/chain';
-import { StateStore } from '../../src/state_store';
+import { StateStore } from '../../src/state_store_v1';
 import {
 	createValidDefaultBlock,
 	genesisBlock,

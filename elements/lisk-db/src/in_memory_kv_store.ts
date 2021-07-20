@@ -11,36 +11,32 @@
  *
  * Removal or modification of this copyright notice is prohibited.
  */
-import * as fs from 'fs';
-import * as path from 'path';
 import { debug } from 'debug';
 import levelup, { LevelUp } from 'levelup';
-import rocksDB from 'rocksdb';
+import { MemDown } from 'memdown';
 import { NotFoundError } from './errors';
 import { Options, BatchChain, ReadStreamOptions } from './types';
 
+// eslint-disable-next-line
+const memdown = require('memdown');
+
 const logger = debug('db');
 
-export class KVStore {
-	private readonly _db: LevelUp<rocksDB>;
+export class InMemoryKVStore {
+	private readonly _db: LevelUp<MemDown<Buffer, Buffer>>;
 
-	public constructor(filePath: string) {
-		logger('opening file', { filePath });
-		const parentDir = path.resolve(path.join(filePath, '../'));
-		if (!fs.existsSync(parentDir)) {
-			throw new Error(`${parentDir} does not exist`);
-		}
-		this._db = levelup(rocksDB(filePath));
+	public constructor() {
+		// eslint-disable-next-line
+		this._db = levelup(memdown());
 	}
 
-	public async close(): Promise<void> {
-		await this._db.close();
-	}
+	// eslint-disable-next-line @typescript-eslint/no-empty-function
+	public async close(): Promise<void> {}
 
 	public async get(key: Buffer): Promise<Buffer> {
 		logger('get', { key });
 		try {
-			const result = (await this._db.get(key)) as Buffer;
+			const result = await this._db.get(key);
 			return result;
 		} catch (error) {
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access

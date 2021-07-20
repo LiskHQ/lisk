@@ -12,5 +12,24 @@
  * Removal or modification of this copyright notice is prohibited.
  */
 
-export { NotFoundError } from './errors';
-export { StateStore, IterationOptions } from './state_store';
+export interface Options {
+	readonly gt?: Buffer;
+	readonly gte?: Buffer;
+	readonly lt?: Buffer;
+	readonly lte?: Buffer;
+	readonly reverse?: boolean;
+	readonly limit?: number;
+}
+
+export interface BatchChain {
+	put: (key: Buffer, value: Buffer) => this;
+	del: (key: Buffer) => this;
+	clear: () => this;
+	write: () => Promise<this>;
+	readonly length: number;
+}
+
+export interface ReadStreamOptions extends Options {
+	readonly keys?: boolean;
+	readonly values?: boolean;
+}
