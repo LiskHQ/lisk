@@ -19,6 +19,8 @@ import { DataAccess } from '../../../src/data_access';
 import { BlockHeader, StateDiff } from '../../../src/types';
 import { defaultAccount, defaultAccountSchema } from '../../utils/account';
 import { defaultNetworkIdentifier, registeredBlockHeaders } from '../../utils/block';
+import { concatDBKeys } from '../../../src/utils';
+import { DB_KEY_CHAIN_STATE } from '../../../src/db_keys';
 
 jest.mock('@liskhq/lisk-db');
 
@@ -82,7 +84,7 @@ describe('state store / chain_state', () => {
 		it('should try to get value from database if not in cache', async () => {
 			// Arrange
 			when(db.get)
-				.calledWith(Buffer.from('chain:key1', 'utf8'))
+				.calledWith(concatDBKeys(DB_KEY_CHAIN_STATE, Buffer.from('key1', 'utf8')))
 				.mockResolvedValue('value5' as never);
 			// Act & Assert
 			expect(await stateStore.chain.get(Buffer.from('key1', 'utf8'))).toEqual('value5');
@@ -135,11 +137,11 @@ describe('state store / chain_state', () => {
 			stateDiff = stateStore.chain.finalize(batchStub);
 			// Assert
 			expect(batchStub.put).toHaveBeenCalledWith(
-				Buffer.from('chain:key3', 'utf8'),
+				concatDBKeys(DB_KEY_CHAIN_STATE, Buffer.from('key3', 'utf8')),
 				Buffer.from('value4'),
 			);
 			expect(batchStub.put).toHaveBeenCalledWith(
-				Buffer.from('chain:key4', 'utf8'),
+				concatDBKeys(DB_KEY_CHAIN_STATE, Buffer.from('key4', 'utf8')),
 				Buffer.from('value5'),
 			);
 		});
@@ -158,11 +160,14 @@ describe('state store / chain_state', () => {
 			expect(stateDiff).toStrictEqual({
 				updated: [
 					{
-						key: Buffer.from('chain:existing', 'utf8'),
+						key: concatDBKeys(DB_KEY_CHAIN_STATE, Buffer.from('existing', 'utf8')),
 						value: originalValue,
 					},
 				],
-				created: [Buffer.from('chain:key3', 'utf8'), Buffer.from('chain:key4', 'utf8')],
+				created: [
+					concatDBKeys(DB_KEY_CHAIN_STATE, Buffer.from('key3', 'utf8')),
+					concatDBKeys(DB_KEY_CHAIN_STATE, Buffer.from('key4', 'utf8')),
+				],
 				deleted: [],
 			});
 		});

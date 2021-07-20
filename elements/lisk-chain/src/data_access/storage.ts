@@ -27,8 +27,8 @@ import {
 	DB_KEY_CHAIN_STATE,
 	DB_KEY_CONSENSUS_STATE,
 	DB_KEY_DIFF_STATE,
-} from './constants';
-import { concatKeys } from '../utils';
+} from '../db_keys';
+import { concatDBKeys } from '../utils';
 import { stateDiffSchema } from '../schema';
 
 export class Storage {
@@ -42,7 +42,7 @@ export class Storage {
 		Block headers
 	*/
 	public async getBlockHeaderByID(id: Buffer): Promise<Buffer> {
-		const block = await this._db.get(concatKeys(DB_KEY_BLOCKS_ID, id));
+		const block = await this._db.get(concatDBKeys(DB_KEY_BLOCKS_ID, id));
 		return block;
 	}
 
@@ -50,7 +50,7 @@ export class Storage {
 		const blocks = [];
 		for (const id of arrayOfBlockIds) {
 			try {
-				const block = await this._db.get(concatKeys(DB_KEY_BLOCKS_ID, id));
+				const block = await this._db.get(concatDBKeys(DB_KEY_BLOCKS_ID, id));
 				blocks.push(block);
 			} catch (dbError) {
 				if (dbError instanceof NotFoundError) {
@@ -63,7 +63,7 @@ export class Storage {
 	}
 
 	public async getBlockHeaderByHeight(height: number): Promise<Buffer> {
-		const id = await this._db.get(concatKeys(DB_KEY_BLOCKS_HEIGHT, formatInt(height)));
+		const id = await this._db.get(concatDBKeys(DB_KEY_BLOCKS_HEIGHT, formatInt(height)));
 		return this.getBlockHeaderByID(id);
 	}
 
@@ -72,8 +72,8 @@ export class Storage {
 		toHeight: number,
 	): Promise<Buffer[]> {
 		const stream = this._db.createReadStream({
-			gte: concatKeys(DB_KEY_BLOCKS_HEIGHT, formatInt(fromHeight)),
-			lte: concatKeys(DB_KEY_BLOCKS_HEIGHT, formatInt(toHeight)),
+			gte: concatDBKeys(DB_KEY_BLOCKS_HEIGHT, formatInt(fromHeight)),
+			lte: concatDBKeys(DB_KEY_BLOCKS_HEIGHT, formatInt(toHeight)),
 			reverse: true,
 		});
 		const blockIDs = await new Promise<Buffer[]>((resolve, reject) => {
@@ -256,7 +256,7 @@ export class Storage {
 	}
 
 	public async isBlockPersisted(blockID: Buffer): Promise<boolean> {
-		return this._db.exists(concatKeys(DB_KEY_BLOCKS_ID, blockID));
+		return this._db.exists(concatDBKeys(DB_KEY_BLOCKS_ID, blockID));
 	}
 
 	/*
@@ -264,7 +264,7 @@ export class Storage {
 	*/
 	public async getChainState(key: Buffer): Promise<Buffer | undefined> {
 		try {
-			const value = await this._db.get(concatKeys(DB_KEY_CHAIN_STATE, key));
+			const value = await this._db.get(concatDBKeys(DB_KEY_CHAIN_STATE, key));
 
 			return value;
 		} catch (error) {
@@ -280,7 +280,7 @@ export class Storage {
 	*/
 	public async getConsensusState(key: Buffer): Promise<Buffer | undefined> {
 		try {
-			const value = await this._db.get(concatKeys(DB_KEY_CONSENSUS_STATE, key));
+			const value = await this._db.get(concatDBKeys(DB_KEY_CONSENSUS_STATE, key));
 
 			return value;
 		} catch (error) {
@@ -295,7 +295,7 @@ export class Storage {
 		Accounts
 	*/
 	public async getAccountByAddress(address: Buffer): Promise<Buffer> {
-		const account = await this._db.get(concatKeys(DB_KEY_ACCOUNTS_ADDRESS, address));
+		const account = await this._db.get(concatDBKeys(DB_KEY_ACCOUNTS_ADDRESS, address));
 		return account;
 	}
 
@@ -326,7 +326,7 @@ export class Storage {
 		Transactions
 	*/
 	public async getTransactionByID(id: Buffer): Promise<Buffer> {
-		const transaction = await this._db.get(concatKeys(DB_KEY_TRANSACTIONS_ID, id));
+		const transaction = await this._db.get(concatDBKeys(DB_KEY_TRANSACTIONS_ID, id));
 
 		return transaction;
 	}
@@ -351,7 +351,7 @@ export class Storage {
 	}
 
 	public async isTransactionPersisted(transactionId: Buffer): Promise<boolean> {
-		return this._db.exists(concatKeys(DB_KEY_TRANSACTIONS_ID, transactionId));
+		return this._db.exists(concatDBKeys(DB_KEY_TRANSACTIONS_ID, transactionId));
 	}
 
 	/*
@@ -368,18 +368,18 @@ export class Storage {
 	): Promise<void> {
 		const heightBuf = formatInt(height);
 		const batch = this._db.batch();
-		batch.put(concatKeys(DB_KEY_BLOCKS_ID, id), header);
-		batch.put(concatKeys(DB_KEY_BLOCKS_HEIGHT, heightBuf), id);
+		batch.put(concatDBKeys(DB_KEY_BLOCKS_ID, id), header);
+		batch.put(concatDBKeys(DB_KEY_BLOCKS_HEIGHT, heightBuf), id);
 		if (payload.length > 0) {
 			const ids = [];
 			for (const { id: txID, value } of payload) {
 				ids.push(txID);
-				batch.put(concatKeys(DB_KEY_TRANSACTIONS_ID, txID), value);
+				batch.put(concatDBKeys(DB_KEY_TRANSACTIONS_ID, txID), value);
 			}
-			batch.put(concatKeys(DB_KEY_TRANSACTIONS_BLOCK_ID, id), Buffer.concat(ids));
+			batch.put(concatDBKeys(DB_KEY_TRANSACTIONS_BLOCK_ID, id), Buffer.concat(ids));
 		}
 		if (removeFromTemp) {
-			batch.del(concatKeys(DB_KEY_TEMPBLOCKS_HEIGHT, heightBuf));
+			batch.del(concatDBKeys(DB_KEY_TEMPBLOCKS_HEIGHT, heightBuf));
 		}
 		stateStore.finalize(height, batch);
 		await batch.write();
@@ -396,19 +396,19 @@ export class Storage {
 	): Promise<StateDiff> {
 		const batch = this._db.batch();
 		const heightBuf = formatInt(height);
-		batch.del(concatKeys(DB_KEY_BLOCKS_ID, id));
-		batch.del(concatKeys(DB_KEY_BLOCKS_HEIGHT, heightBuf));
+		batch.del(concatDBKeys(DB_KEY_BLOCKS_ID, id));
+		batch.del(concatDBKeys(DB_KEY_BLOCKS_HEIGHT, heightBuf));
 		if (txIDs.length > 0) {
 			for (const txID of txIDs) {
-				batch.del(concatKeys(DB_KEY_TRANSACTIONS_ID, txID));
+				batch.del(concatDBKeys(DB_KEY_TRANSACTIONS_ID, txID));
 			}
-			batch.del(concatKeys(DB_KEY_TRANSACTIONS_BLOCK_ID, id));
+			batch.del(concatDBKeys(DB_KEY_TRANSACTIONS_BLOCK_ID, id));
 		}
 		if (saveToTemp) {
-			batch.put(concatKeys(DB_KEY_TEMPBLOCKS_HEIGHT, heightBuf), fullBlock);
+			batch.put(concatDBKeys(DB_KEY_TEMPBLOCKS_HEIGHT, heightBuf), fullBlock);
 		}
 		// Take the diff to revert back states
-		const diffKey = concatKeys(DB_KEY_DIFF_STATE, heightBuf);
+		const diffKey = concatDBKeys(DB_KEY_DIFF_STATE, heightBuf);
 
 		// If there is no diff, the key might not exist
 		const stateDiff = await this._db.get(diffKey);
@@ -446,15 +446,15 @@ export class Storage {
 	// This function is out of batch, but even if it fails, it will run again next time
 	private async _cleanUntil(height: number): Promise<void> {
 		await this._db.clear({
-			gte: concatKeys(DB_KEY_DIFF_STATE, formatInt(0)),
-			lt: concatKeys(DB_KEY_DIFF_STATE, formatInt(height)),
+			gte: concatDBKeys(DB_KEY_DIFF_STATE, formatInt(0)),
+			lt: concatDBKeys(DB_KEY_DIFF_STATE, formatInt(height)),
 		});
 	}
 
 	private async _getTransactions(blockID: Buffer): Promise<Buffer[]> {
 		const txIDs: Buffer[] = [];
 		try {
-			const ids = await this._db.get(concatKeys(DB_KEY_TRANSACTIONS_BLOCK_ID, blockID));
+			const ids = await this._db.get(concatDBKeys(DB_KEY_TRANSACTIONS_BLOCK_ID, blockID));
 			const idLength = 32;
 			for (let i = 0; i < ids.length; i += idLength) {
 				txIDs.push(ids.slice(i, i + idLength));
@@ -469,7 +469,7 @@ export class Storage {
 		}
 		const transactions = [];
 		for (const txID of txIDs) {
-			const tx = await this._db.get(concatKeys(DB_KEY_TRANSACTIONS_ID, txID));
+			const tx = await this._db.get(concatDBKeys(DB_KEY_TRANSACTIONS_ID, txID));
 			transactions.push(tx);
 		}
 

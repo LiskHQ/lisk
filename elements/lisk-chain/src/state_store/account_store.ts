@@ -13,10 +13,10 @@
  */
 import { NotFoundError, BatchChain } from '@liskhq/lisk-db';
 import { objects, dataStructures } from '@liskhq/lisk-utils';
+import { DB_KEY_ACCOUNTS_ADDRESS } from '../db_keys';
 import { DataAccess } from '../data_access';
 import { StateDiff, Account, AccountDefaultProps } from '../types';
-import { DB_KEY_ACCOUNTS_ADDRESS } from '../data_access/constants';
-import { concatKeys } from '../utils';
+import { concatDBKeys } from '../utils';
 
 interface AdditionalInformation {
 	readonly defaultAccount: Record<string, unknown>;
@@ -148,7 +148,7 @@ export class AccountStore {
 		for (const updatedAccount of this._data.values()) {
 			if (this._updatedKeys.has(updatedAccount.address)) {
 				const encodedAccount = this._dataAccess.encodeAccount(updatedAccount);
-				const dbKey = concatKeys(DB_KEY_ACCOUNTS_ADDRESS, updatedAccount.address);
+				const dbKey = concatDBKeys(DB_KEY_ACCOUNTS_ADDRESS, updatedAccount.address);
 				batch.put(dbKey, encodedAccount);
 
 				const initialAccount = this._initialAccountValue.get(updatedAccount.address);
@@ -167,7 +167,7 @@ export class AccountStore {
 			if (!initialAccount) {
 				throw new Error('Deleting account should have initial account');
 			}
-			const dbKey = concatKeys(DB_KEY_ACCOUNTS_ADDRESS, deletedAddress);
+			const dbKey = concatDBKeys(DB_KEY_ACCOUNTS_ADDRESS, deletedAddress);
 			batch.del(dbKey);
 			stateDiff.deleted.push({
 				key: dbKey,

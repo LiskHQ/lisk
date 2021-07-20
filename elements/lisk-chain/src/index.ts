@@ -28,12 +28,8 @@ export {
 	stateDiffSchema,
 	getRegisteredBlockAssetSchema,
 } from './schema';
-export {
-	CONSENSUS_STATE_VALIDATORS_KEY,
-	CONSENSUS_STATE_FINALIZED_HEIGHT_KEY,
-	TAG_BLOCK_HEADER,
-	TAG_TRANSACTION,
-} from './constants';
+export { TAG_BLOCK_HEADER, TAG_TRANSACTION } from './constants';
+export * from './db_keys';
 export type {
 	Account,
 	AccountDefaultProps,
@@ -48,7 +44,12 @@ export type {
 	AccountSchema,
 } from './types';
 export { Slots } from './slots';
-export { readGenesisBlockJSON, getValidators, getAccountSchemaWithDefault } from './utils';
+export {
+	readGenesisBlockJSON,
+	getValidators,
+	getAccountSchemaWithDefault,
+	concatDBKeys,
+} from './utils';
 export * as testing from './testing';
 
 export type { StateStore } from './state_store';

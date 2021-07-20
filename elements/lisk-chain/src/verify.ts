@@ -18,8 +18,8 @@ import { DataAccess } from './data_access';
 import { BlockHeader, Block, GenesisBlock, Validator } from './types';
 import { StateStore } from './state_store';
 import { Slots } from './slots';
-import { CONSENSUS_STATE_VALIDATORS_KEY } from './constants';
 import { validatorsSchema } from './schema';
+import { DB_KEY_CONSENSUS_STATE_VALIDATORS } from './db_keys';
 
 const debug = createDebug('lisk:chain:verify');
 
@@ -53,7 +53,7 @@ export const verifyBlockGenerator = async (
 ): Promise<void> => {
 	const currentSlot = slots.getSlotNumber(header.timestamp);
 
-	const validatorsBuffer = await stateStore.consensus.get(CONSENSUS_STATE_VALIDATORS_KEY);
+	const validatorsBuffer = await stateStore.consensus.get(DB_KEY_CONSENSUS_STATE_VALIDATORS);
 
 	if (!validatorsBuffer) {
 		throw new Error(

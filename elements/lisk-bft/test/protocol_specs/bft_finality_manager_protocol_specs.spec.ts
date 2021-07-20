@@ -16,7 +16,7 @@ import { codec } from '@liskhq/lisk-codec';
 import { dataStructures } from '@liskhq/lisk-utils';
 import {
 	Chain,
-	CONSENSUS_STATE_VALIDATORS_KEY,
+	DB_KEY_CONSENSUS_STATE_VALIDATORS,
 	validatorsSchema,
 	Validator,
 	BlockHeader,
@@ -133,7 +133,7 @@ describe('FinalityManager', () => {
 						);
 
 						await stateStore.consensus.set(
-							CONSENSUS_STATE_VALIDATORS_KEY,
+							DB_KEY_CONSENSUS_STATE_VALIDATORS,
 							codec.encode(validatorsSchema, { validators: validatorsMap.values() }),
 						);
 						(stateStore.chain as any).lastBlockHeaders = filteredBlockHeaders;

@@ -12,6 +12,7 @@
  * Removal or modification of this copyright notice is prohibited.
  */
 
+import { DB_KEY_ACCOUNTS_ADDRESS, concatDBKeys } from '@liskhq/lisk-chain';
 import { createWSClient } from '@liskhq/lisk-api-client';
 import {
 	closeApplication,
@@ -96,7 +97,9 @@ describe('api client ws mode', () => {
 			await expect(
 				client.invoke('app:getAccount', { address: 'randomString*&&^%^' }),
 			).rejects.toThrow(
-				`Specified key ${Buffer.from('accounts:address:', 'utf8').toString('hex')} does not exist`,
+				`Specified key ${concatDBKeys(DB_KEY_ACCOUNTS_ADDRESS, Buffer.alloc(0)).toString(
+					'hex',
+				)} does not exist`,
 			);
 		});
 	});

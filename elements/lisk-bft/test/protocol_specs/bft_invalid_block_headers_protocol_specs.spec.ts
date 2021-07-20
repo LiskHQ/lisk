@@ -16,7 +16,7 @@ import { dataStructures } from '@liskhq/lisk-utils';
 import {
 	Chain,
 	Validator,
-	CONSENSUS_STATE_VALIDATORS_KEY,
+	DB_KEY_CONSENSUS_STATE_VALIDATORS,
 	validatorsSchema,
 	StateStore,
 	testing,
@@ -61,7 +61,7 @@ describe('FinalityManager', () => {
 					});
 				}
 				await stateStore.consensus.set(
-					CONSENSUS_STATE_VALIDATORS_KEY,
+					DB_KEY_CONSENSUS_STATE_VALIDATORS,
 					codec.encode(validatorsSchema, { validators: validatorsMap.values() }),
 				);
 				// Arrange

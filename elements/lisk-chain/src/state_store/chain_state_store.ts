@@ -16,8 +16,8 @@ import { dataStructures } from '@liskhq/lisk-utils';
 import { BatchChain } from '@liskhq/lisk-db';
 import { DataAccess } from '../data_access';
 import { BlockHeader, StateDiff } from '../types';
-import { DB_KEY_CHAIN_STATE } from '../data_access/constants';
-import { concatKeys } from '../utils';
+import { concatDBKeys } from '../utils';
+import { DB_KEY_CHAIN_STATE } from '../db_keys';
 
 interface AdditionalInformation {
 	readonly lastBlockHeaders: ReadonlyArray<BlockHeader>;
@@ -111,7 +111,7 @@ export class ChainStateStore {
 		}
 
 		for (const key of Array.from(this._updatedKeys)) {
-			const dbKey = concatKeys(DB_KEY_CHAIN_STATE, key);
+			const dbKey = concatDBKeys(DB_KEY_CHAIN_STATE, key);
 			const updatedValue = this._data.get(key) as Buffer;
 			batch.put(dbKey, updatedValue);
 

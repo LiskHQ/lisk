@@ -19,9 +19,9 @@ import { AccountStore } from './account_store';
 import { ChainStateStore } from './chain_state_store';
 import { ConsensusStateStore } from './consensus_state_store';
 import { DataAccess } from '../data_access';
-import { DB_KEY_DIFF_STATE } from '../data_access/constants';
 import { stateDiffSchema } from '../schema';
-import { concatKeys } from '../utils';
+import { concatDBKeys } from '../utils';
+import { DB_KEY_DIFF_STATE } from '../db_keys';
 
 interface AdditionalInformation {
 	readonly lastBlockHeaders: ReadonlyArray<BlockHeader>;
@@ -48,7 +48,7 @@ const saveDiff = (
 	}
 
 	const encodedDiff = codec.encode(stateDiffSchema, diffToEncode);
-	batch.put(concatKeys(DB_KEY_DIFF_STATE, formatInt(height)), encodedDiff);
+	batch.put(concatDBKeys(DB_KEY_DIFF_STATE, formatInt(height)), encodedDiff);
 };
 
 export class StateStore {

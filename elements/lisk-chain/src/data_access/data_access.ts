@@ -21,7 +21,7 @@ import { Storage as StorageAccess } from './storage';
 import { StateStore } from '../state_store';
 import { BlockHeaderInterfaceAdapter } from './block_header_interface_adapter';
 import { blockSchema } from '../schema';
-import { DB_KEY_ACCOUNTS_ADDRESS } from './constants';
+import { DB_KEY_ACCOUNTS_ADDRESS } from '../db_keys';
 
 interface DAConstructor {
 	readonly db: KVStore;

@@ -18,7 +18,7 @@ import { EventEmitter } from 'events';
 import {
 	BlockHeader,
 	Chain,
-	CONSENSUS_STATE_FINALIZED_HEIGHT_KEY,
+	DB_KEY_CONSENSUS_STATE_FINALIZED_HEIGHT,
 	getValidators,
 	StateStore,
 } from '@liskhq/lisk-chain';
@@ -90,7 +90,7 @@ export class BFT extends EventEmitter {
 		const { finalizedHeight } = this.finalityManager;
 
 		await stateStore.consensus.set(
-			CONSENSUS_STATE_FINALIZED_HEIGHT_KEY,
+			DB_KEY_CONSENSUS_STATE_FINALIZED_HEIGHT,
 			codec.encode(BFTFinalizedHeightCodecSchema, { finalizedHeight }),
 		);
 	}
@@ -211,7 +211,7 @@ export class BFT extends EventEmitter {
 	private async _initFinalityManager(stateStore: StateStore): Promise<FinalityManager> {
 		// Check what finalized height was stored last time
 		const storedFinalizedHeightBuffer = await stateStore.consensus.get(
-			CONSENSUS_STATE_FINALIZED_HEIGHT_KEY,
+			DB_KEY_CONSENSUS_STATE_FINALIZED_HEIGHT,
 		);
 
 		// Choose max between stored finalized height or genesis height

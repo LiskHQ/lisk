@@ -18,6 +18,11 @@ import { BlockHeader, StateDiff } from '../../../src/types';
 import { DataAccess } from '../../../src/data_access';
 import { defaultAccount, defaultAccountSchema } from '../../utils/account';
 import { defaultNetworkIdentifier, registeredBlockHeaders } from '../../utils/block';
+import { concatDBKeys } from '../../../src/utils';
+import {
+	DB_KEY_CONSENSUS_STATE,
+	DB_KEY_CONSENSUS_STATE_FINALIZED_HEIGHT,
+} from '../../../src/db_keys';
 
 jest.mock('@liskhq/lisk-db');
 
@@ -52,7 +57,7 @@ describe('state store / chain_state', () => {
 			// Arrange
 			await stateStore.consensus.set(Buffer.from('key1', 'utf8'), Buffer.from('value1'));
 			when(db.get)
-				.calledWith(Buffer.from('consensus:key1', 'utf8'))
+				.calledWith(concatDBKeys(DB_KEY_CONSENSUS_STATE, Buffer.from('key1', 'utf8')))
 				.mockResolvedValue(Buffer.from('value5') as never);
 			// Act & Assert
 			expect(await stateStore.consensus.get(Buffer.from('key1', 'utf8'))).toEqual(
@@ -63,7 +68,7 @@ describe('state store / chain_state', () => {
 		it('should try to get value from database if not in cache', async () => {
 			// Arrange
 			when(db.get)
-				.calledWith(Buffer.from('consensus:key1', 'utf8'))
+				.calledWith(concatDBKeys(DB_KEY_CONSENSUS_STATE, Buffer.from('key1', 'utf8')))
 				.mockResolvedValue(Buffer.from('value5') as never);
 			// Act & Assert
 			expect(await stateStore.consensus.get(Buffer.from('key1', 'utf8'))).toEqual(
@@ -112,29 +117,29 @@ describe('state store / chain_state', () => {
 
 		it('should call storage for all the updated keys', async () => {
 			// Act
-			await stateStore.consensus.set(Buffer.from('finalizedHeight', 'utf8'), Buffer.from('3'));
+			await stateStore.consensus.set(DB_KEY_CONSENSUS_STATE_FINALIZED_HEIGHT, Buffer.from('3'));
 			await stateStore.consensus.set(Buffer.from('key3', 'utf8'), Buffer.from('value3'));
 			await stateStore.consensus.set(Buffer.from('key3', 'utf8'), Buffer.from('value4'));
 			await stateStore.consensus.set(Buffer.from('key4', 'utf8'), Buffer.from('value5'));
 			stateDiff = stateStore.consensus.finalize(batchStub);
 			// Assert
 			expect(batchStub.put).toHaveBeenCalledWith(
-				Buffer.from('consensus:key3', 'utf8'),
+				concatDBKeys(DB_KEY_CONSENSUS_STATE, Buffer.from('key3', 'utf8')),
 				Buffer.from('value4'),
 			);
 			expect(batchStub.put).toHaveBeenCalledWith(
-				Buffer.from('consensus:key4', 'utf8'),
+				concatDBKeys(DB_KEY_CONSENSUS_STATE, Buffer.from('key4', 'utf8')),
 				Buffer.from('value5'),
 			);
 			expect(batchStub.put).toHaveBeenCalledWith(
-				Buffer.from('consensus:finalizedHeight', 'utf8'),
+				concatDBKeys(DB_KEY_CONSENSUS_STATE, DB_KEY_CONSENSUS_STATE_FINALIZED_HEIGHT),
 				Buffer.from('3'),
 			);
 		});
 
 		it('should return state diff with created and updated values after finalize', async () => {
 			// Act
-			await stateStore.consensus.set(Buffer.from('finalizedHeight', 'utf8'), Buffer.from('3'));
+			await stateStore.consensus.set(DB_KEY_CONSENSUS_STATE_FINALIZED_HEIGHT, Buffer.from('4'));
 			await stateStore.consensus.set(Buffer.from('key3', 'utf8'), Buffer.from('value3'));
 			await stateStore.consensus.set(Buffer.from('key3', 'utf8'), Buffer.from('value4'));
 			await stateStore.consensus.set(Buffer.from('key4', 'utf8'), Buffer.from('value5'));
@@ -144,9 +149,8 @@ describe('state store / chain_state', () => {
 			expect(stateDiff).toStrictEqual({
 				updated: [],
 				created: [
-					Buffer.from('consensus:finalizedHeight', 'utf8'),
-					Buffer.from('consensus:key3', 'utf8'),
-					Buffer.from('consensus:key4', 'utf8'),
+					concatDBKeys(DB_KEY_CONSENSUS_STATE, Buffer.from('key3', 'utf8')),
+					concatDBKeys(DB_KEY_CONSENSUS_STATE, Buffer.from('key4', 'utf8')),
 				],
 				deleted: [],
 			});

@@ -32,15 +32,15 @@ import { createFakeDefaultAccount, defaultAccountModules } from '../utils/accoun
 import { getTransaction } from '../utils/transaction';
 import { stateDiffSchema, validatorsSchema } from '../../src/schema';
 import { createStateStore } from '../utils/state_store';
-import { CONSENSUS_STATE_VALIDATORS_KEY } from '../../src/constants';
-import { concatKeys } from '../../src/utils';
+import { concatDBKeys } from '../../src/utils';
 import {
 	DB_KEY_BLOCKS_HEIGHT,
 	DB_KEY_BLOCKS_ID,
 	DB_KEY_CONSENSUS_STATE,
 	DB_KEY_DIFF_STATE,
 	DB_KEY_TEMPBLOCKS_HEIGHT,
-} from '../../src/data_access/constants';
+	DB_KEY_CONSENSUS_STATE_VALIDATORS,
+} from '../../src/db_keys';
 
 jest.mock('events');
 jest.mock('@liskhq/lisk-db');
@@ -117,11 +117,11 @@ describe('chain', () => {
 			);
 			when(db.get)
 				.mockRejectedValue(new NotFoundError('Data not found') as never)
-				.calledWith(concatKeys(DB_KEY_BLOCKS_HEIGHT, formatInt(1)))
+				.calledWith(concatDBKeys(DB_KEY_BLOCKS_HEIGHT, formatInt(1)))
 				.mockResolvedValue(genesisBlock.header.id as never)
-				.calledWith(concatKeys(DB_KEY_BLOCKS_ID, genesisBlock.header.id))
+				.calledWith(concatDBKeys(DB_KEY_BLOCKS_ID, genesisBlock.header.id))
 				.mockResolvedValue(encodeGenesisBlockHeader(genesisBlock.header) as never)
-				.calledWith(concatKeys(DB_KEY_BLOCKS_ID, lastBlock.header.id))
+				.calledWith(concatDBKeys(DB_KEY_BLOCKS_ID, lastBlock.header.id))
 				.mockResolvedValue(encodeDefaultBlockHeader(lastBlock.header) as never);
 			jest.spyOn(chainInstance.dataAccess, 'getBlockHeadersByHeightBetween').mockResolvedValue([]);
 		});
@@ -223,8 +223,8 @@ describe('chain', () => {
 				removeFromTempTable: true,
 			});
 			expect(db.clear).toHaveBeenCalledWith({
-				gte: concatKeys(DB_KEY_DIFF_STATE, formatInt(0)),
-				lt: concatKeys(DB_KEY_DIFF_STATE, formatInt(100)),
+				gte: concatDBKeys(DB_KEY_DIFF_STATE, formatInt(0)),
+				lt: concatDBKeys(DB_KEY_DIFF_STATE, formatInt(100)),
 			});
 		});
 
@@ -233,7 +233,7 @@ describe('chain', () => {
 				removeFromTempTable: true,
 			});
 			expect(batchMock.del).toHaveBeenCalledWith(
-				concatKeys(DB_KEY_TEMPBLOCKS_HEIGHT, formatInt(savingBlock.header.height)),
+				concatDBKeys(DB_KEY_TEMPBLOCKS_HEIGHT, formatInt(savingBlock.header.height)),
 			);
 			expect(stateStoreStub.finalize).toHaveBeenCalledTimes(1);
 		});
@@ -241,11 +241,11 @@ describe('chain', () => {
 		it('should save block', async () => {
 			await chainInstance.saveBlock(savingBlock, stateStoreStub, 0);
 			expect(batchMock.put).toHaveBeenCalledWith(
-				concatKeys(DB_KEY_BLOCKS_ID, savingBlock.header.id),
+				concatDBKeys(DB_KEY_BLOCKS_ID, savingBlock.header.id),
 				expect.anything(),
 			);
 			expect(batchMock.put).toHaveBeenCalledWith(
-				concatKeys(DB_KEY_BLOCKS_HEIGHT, formatInt(savingBlock.header.height)),
+				concatDBKeys(DB_KEY_BLOCKS_HEIGHT, formatInt(savingBlock.header.height)),
 				expect.anything(),
 			);
 			expect(stateStoreStub.finalize).toHaveBeenCalledTimes(1);
@@ -311,7 +311,7 @@ describe('chain', () => {
 
 			const block = await createValidDefaultBlock();
 			when(db.get)
-				.calledWith(concatKeys(DB_KEY_DIFF_STATE, formatInt(block.header.height)))
+				.calledWith(concatDBKeys(DB_KEY_DIFF_STATE, formatInt(block.header.height)))
 				.mockResolvedValue(emptyEncodedDiff as never);
 
 			const deleteBlockError = new Error('Delete block failed');
@@ -328,13 +328,13 @@ describe('chain', () => {
 			jest.spyOn(chainInstance.dataAccess, 'getBlockByID').mockResolvedValue(genesisBlock as never);
 			const block = await createValidDefaultBlock();
 			when(db.get)
-				.calledWith(concatKeys(DB_KEY_DIFF_STATE, formatInt(block.header.height)))
+				.calledWith(concatDBKeys(DB_KEY_DIFF_STATE, formatInt(block.header.height)))
 				.mockResolvedValue(emptyEncodedDiff as never);
 			// Act
 			await chainInstance.removeBlock(block, stateStoreStub);
 			// Assert
 			expect(batchMock.put).not.toHaveBeenCalledWith(
-				concatKeys(DB_KEY_TEMPBLOCKS_HEIGHT, formatInt(block.header.height)),
+				concatDBKeys(DB_KEY_TEMPBLOCKS_HEIGHT, formatInt(block.header.height)),
 				block,
 			);
 		});
@@ -345,7 +345,7 @@ describe('chain', () => {
 			const tx = getTransaction();
 			const block = await createValidDefaultBlock({ payload: [tx] });
 			when(db.get)
-				.calledWith(concatKeys(DB_KEY_DIFF_STATE, formatInt(block.header.height)))
+				.calledWith(concatDBKeys(DB_KEY_DIFF_STATE, formatInt(block.header.height)))
 				.mockResolvedValue(emptyEncodedDiff as never);
 			// Act
 			await chainInstance.removeBlock(block, stateStoreStub, {
@@ -353,7 +353,7 @@ describe('chain', () => {
 			});
 			// Assert
 			expect(batchMock.put).toHaveBeenCalledWith(
-				concatKeys(DB_KEY_TEMPBLOCKS_HEIGHT, formatInt(block.header.height)),
+				concatDBKeys(DB_KEY_TEMPBLOCKS_HEIGHT, formatInt(block.header.height)),
 				encodedDefaultBlock(block),
 			);
 		});
@@ -392,7 +392,7 @@ describe('chain', () => {
 				validators,
 			});
 			when(db.get)
-				.calledWith(concatKeys(DB_KEY_CONSENSUS_STATE, CONSENSUS_STATE_VALIDATORS_KEY))
+				.calledWith(concatDBKeys(DB_KEY_CONSENSUS_STATE, DB_KEY_CONSENSUS_STATE_VALIDATORS))
 				.mockResolvedValue(validatorBuffer as never);
 		});
 
@@ -420,7 +420,7 @@ describe('chain', () => {
 				validators,
 			});
 			when(db.get)
-				.calledWith(concatKeys(DB_KEY_CONSENSUS_STATE, CONSENSUS_STATE_VALIDATORS_KEY))
+				.calledWith(concatDBKeys(DB_KEY_CONSENSUS_STATE, DB_KEY_CONSENSUS_STATE_VALIDATORS))
 				.mockResolvedValue(validatorBuffer as never);
 		});
 
@@ -454,7 +454,7 @@ describe('chain', () => {
 			});
 			chainInstance['_numberOfValidators'] = 103;
 			when(db.get)
-				.calledWith(concatKeys(DB_KEY_CONSENSUS_STATE, CONSENSUS_STATE_VALIDATORS_KEY))
+				.calledWith(concatDBKeys(DB_KEY_CONSENSUS_STATE, DB_KEY_CONSENSUS_STATE_VALIDATORS))
 				.mockResolvedValue(validatorBuffer as never);
 		});
 
@@ -488,7 +488,7 @@ describe('chain', () => {
 			expect(stateStore.consensus.set).toHaveBeenCalledTimes(1);
 
 			const updatedValidatorsBuffer = await stateStore.consensus.get(
-				CONSENSUS_STATE_VALIDATORS_KEY,
+				DB_KEY_CONSENSUS_STATE_VALIDATORS,
 			);
 			const { validators: updatedValidators } = codec.decode<{ validators: Validator[] }>(
 				validatorsSchema,
@@ -510,7 +510,7 @@ describe('chain', () => {
 			await chainInstance.setValidators(validators, stateStore, currentBlock.header);
 
 			const updatedValidatorsBuffer = await stateStore.consensus.get(
-				CONSENSUS_STATE_VALIDATORS_KEY,
+				DB_KEY_CONSENSUS_STATE_VALIDATORS,
 			);
 			const { validators: updatedValidators } = codec.decode<{ validators: Validator[] }>(
 				validatorsSchema,
@@ -552,7 +552,7 @@ describe('chain', () => {
 			await chainInstance.setValidators(validators, stateStore, currentBlock.header);
 
 			const updatedValidatorsBuffer = await stateStore.consensus.get(
-				CONSENSUS_STATE_VALIDATORS_KEY,
+				DB_KEY_CONSENSUS_STATE_VALIDATORS,
 			);
 			const { validators: updatedValidators } = codec.decode<{ validators: Validator[] }>(
 				validatorsSchema,
@@ -581,7 +581,7 @@ describe('chain', () => {
 			await chainInstance.setValidators(validators, stateStore, currentBlock.header);
 
 			const updatedValidatorsBuffer = await stateStore.consensus.get(
-				CONSENSUS_STATE_VALIDATORS_KEY,
+				DB_KEY_CONSENSUS_STATE_VALIDATORS,
 			);
 			const { validators: updatedValidators } = codec.decode<{ validators: Validator[] }>(
 				validatorsSchema,

@@ -17,9 +17,9 @@ import { dataStructures } from '@liskhq/lisk-utils';
 import { getRandomBytes, getAddressFromPublicKey } from '@liskhq/lisk-cryptography';
 import {
 	BlockHeader,
-	CONSENSUS_STATE_FINALIZED_HEIGHT_KEY,
 	Chain,
-	CONSENSUS_STATE_VALIDATORS_KEY,
+	DB_KEY_CONSENSUS_STATE_VALIDATORS,
+	DB_KEY_CONSENSUS_STATE_FINALIZED_HEIGHT,
 	validatorsSchema,
 	StateStore,
 	testing,
@@ -307,7 +307,7 @@ describe('finality_manager', () => {
 					lastBlockHeaders: bftHeaders,
 				}) as unknown) as StateStore;
 				await stateStore.consensus.set(
-					CONSENSUS_STATE_FINALIZED_HEIGHT_KEY,
+					DB_KEY_CONSENSUS_STATE_FINALIZED_HEIGHT,
 					codec.encode(BFTFinalizedHeightCodecSchema, {
 						finalizedHeight: 5,
 					}),
@@ -317,7 +317,7 @@ describe('finality_manager', () => {
 					codec.encode(BFTVotingLedgerSchema, validatorLedger),
 				);
 				await stateStore.consensus.set(
-					CONSENSUS_STATE_VALIDATORS_KEY,
+					DB_KEY_CONSENSUS_STATE_VALIDATORS,
 					codec.encode(validatorsSchema, {
 						validators: bftHeaders.slice(0, 103).map(h => ({
 							address: getAddressFromPublicKey(h.generatorPublicKey),
@@ -374,7 +374,7 @@ describe('finality_manager', () => {
 				}) as unknown) as StateStore;
 
 				await stateStore.consensus.set(
-					CONSENSUS_STATE_VALIDATORS_KEY,
+					DB_KEY_CONSENSUS_STATE_VALIDATORS,
 					codec.encode(validatorsSchema, {
 						validators: [
 							{
@@ -415,7 +415,7 @@ describe('finality_manager', () => {
 				}) as unknown) as StateStore;
 
 				await stateStore.consensus.set(
-					CONSENSUS_STATE_VALIDATORS_KEY,
+					DB_KEY_CONSENSUS_STATE_VALIDATORS,
 					codec.encode(validatorsSchema, {
 						validators: [
 							{
@@ -484,7 +484,7 @@ describe('finality_manager', () => {
 				}) as unknown) as StateStore;
 
 				await stateStore.consensus.set(
-					CONSENSUS_STATE_VALIDATORS_KEY,
+					DB_KEY_CONSENSUS_STATE_VALIDATORS,
 					codec.encode(validatorsSchema, {
 						validators: addressMap
 							.values()
@@ -515,7 +515,7 @@ describe('finality_manager', () => {
 				}) as unknown) as StateStore;
 
 				await stateStore.consensus.set(
-					CONSENSUS_STATE_VALIDATORS_KEY,
+					DB_KEY_CONSENSUS_STATE_VALIDATORS,
 					codec.encode(validatorsSchema, {
 						validators: [
 							{

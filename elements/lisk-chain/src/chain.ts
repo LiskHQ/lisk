@@ -24,7 +24,6 @@ import {
 	EVENT_DELETE_BLOCK,
 	EVENT_NEW_BLOCK,
 	EVENT_VALIDATORS_CHANGED,
-	CONSENSUS_STATE_VALIDATORS_KEY,
 } from './constants';
 import { DataAccess } from './data_access';
 import { Slots } from './slots';
@@ -60,6 +59,7 @@ import {
 	validatorsSchema,
 } from './schema';
 import { Transaction } from './transaction';
+import { DB_KEY_CONSENSUS_STATE_VALIDATORS } from './db_keys';
 
 interface ChainConstructor {
 	readonly db: KVStore;
@@ -306,7 +306,7 @@ export class Chain {
 			isConsensusParticipant: false,
 		}));
 		await stateStore.consensus.set(
-			CONSENSUS_STATE_VALIDATORS_KEY,
+			DB_KEY_CONSENSUS_STATE_VALIDATORS,
 			codec.encode(validatorsSchema, { validators: initialValidators }),
 		);
 		this._numberOfValidators = block.header.asset.initDelegates.length;
@@ -413,7 +413,7 @@ export class Chain {
 
 	public async getValidators(): Promise<Validator[]> {
 		const validatorsBuffer = await this.dataAccess.getConsensusState(
-			CONSENSUS_STATE_VALIDATORS_KEY,
+			DB_KEY_CONSENSUS_STATE_VALIDATORS,
 		);
 		if (!validatorsBuffer) {
 			return [];
@@ -439,7 +439,7 @@ export class Chain {
 			);
 			return;
 		}
-		const validatorsBuffer = await stateStore.consensus.get(CONSENSUS_STATE_VALIDATORS_KEY);
+		const validatorsBuffer = await stateStore.consensus.get(DB_KEY_CONSENSUS_STATE_VALIDATORS);
 		if (!validatorsBuffer) {
 			throw new Error('Previous validator set must exist');
 		}
@@ -457,7 +457,7 @@ export class Chain {
 			});
 		}
 		const encodedValidators = codec.encode(validatorsSchema, { validators: nextValidatorSet });
-		await stateStore.consensus.set(CONSENSUS_STATE_VALIDATORS_KEY, encodedValidators);
+		await stateStore.consensus.set(DB_KEY_CONSENSUS_STATE_VALIDATORS, encodedValidators);
 		this.events.emit(EVENT_VALIDATORS_CHANGED, { validators: nextValidatorSet });
 	}
 

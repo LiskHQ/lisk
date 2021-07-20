@@ -32,9 +32,9 @@ import {
 	DB_KEY_ACCOUNTS_ADDRESS,
 	DB_KEY_CHAIN_STATE,
 	DB_KEY_CONSENSUS_STATE,
-} from '../../../src/data_access/constants';
+} from '../../../src/db_keys';
 import { stateDiffSchema } from '../../../src/schema';
-import { concatKeys } from '../../../src/utils';
+import { concatDBKeys } from '../../../src/utils';
 
 describe('stateStore.finalize.saveDiff', () => {
 	const defaultNetworkIdentifier = Buffer.from(
@@ -101,15 +101,15 @@ describe('stateStore.finalize.saveDiff', () => {
 			// Act
 			stateStore.finalize(fakeHeight, batch);
 			await batch.write();
-			const diff = await db.get(concatKeys(DB_KEY_DIFF_STATE, formatInt(fakeHeight)));
+			const diff = await db.get(concatDBKeys(DB_KEY_DIFF_STATE, formatInt(fakeHeight)));
 			const decodedDiff = codec.decode(stateDiffSchema, diff);
 
 			// Assert
 			expect(decodedDiff).toStrictEqual({
 				updated: [],
 				created: [
-					concatKeys(DB_KEY_ACCOUNTS_ADDRESS, accounts[0].address),
-					concatKeys(DB_KEY_ACCOUNTS_ADDRESS, accounts[1].address),
+					concatDBKeys(DB_KEY_ACCOUNTS_ADDRESS, accounts[0].address),
+					concatDBKeys(DB_KEY_ACCOUNTS_ADDRESS, accounts[1].address),
 				],
 				deleted: [],
 			});
@@ -126,13 +126,13 @@ describe('stateStore.finalize.saveDiff', () => {
 			await stateStore.account.del(accounts[0].address);
 			stateStore.finalize(fakeHeight, batch);
 			await batch.write();
-			const diff = await db.get(concatKeys(DB_KEY_DIFF_STATE, formatInt(fakeHeight)));
+			const diff = await db.get(concatDBKeys(DB_KEY_DIFF_STATE, formatInt(fakeHeight)));
 			const decodedDiff = codec.decode(stateDiffSchema, diff);
 
 			// Assert
 			expect(decodedDiff).toStrictEqual({
 				updated: [],
-				created: [concatKeys(DB_KEY_ACCOUNTS_ADDRESS, accounts[1].address)],
+				created: [concatDBKeys(DB_KEY_ACCOUNTS_ADDRESS, accounts[1].address)],
 				deleted: [],
 			});
 		});
@@ -166,7 +166,7 @@ describe('stateStore.finalize.saveDiff', () => {
 			newStateStore.finalize(nextHeight, nextBatch);
 			await nextBatch.write();
 
-			const diff = await db.get(concatKeys(DB_KEY_DIFF_STATE, formatInt(nextHeight)));
+			const diff = await db.get(concatDBKeys(DB_KEY_DIFF_STATE, formatInt(nextHeight)));
 			const decodedDiff = codec.decode(stateDiffSchema, diff);
 
 			// Assert
@@ -175,7 +175,7 @@ describe('stateStore.finalize.saveDiff', () => {
 				created: [],
 				deleted: [
 					{
-						key: concatKeys(DB_KEY_ACCOUNTS_ADDRESS, accounts[0].address),
+						key: concatDBKeys(DB_KEY_ACCOUNTS_ADDRESS, accounts[0].address),
 						value: originalBuffer,
 					},
 				],
@@ -192,7 +192,7 @@ describe('stateStore.finalize.saveDiff', () => {
 			// Act
 			stateStore.finalize(fakeHeight, batch);
 			await batch.write();
-			const diff = await db.get(concatKeys(DB_KEY_DIFF_STATE, formatInt(fakeHeight)));
+			const diff = await db.get(concatDBKeys(DB_KEY_DIFF_STATE, formatInt(fakeHeight)));
 			const decodedDiff = codec.decode(stateDiffSchema, diff);
 
 			// Assert
@@ -216,7 +216,7 @@ describe('stateStore.finalize.saveDiff', () => {
 			// Act
 			stateStore.finalize(fakeHeight, batch);
 			await batch.write();
-			const diff = await db.get(concatKeys(DB_KEY_DIFF_STATE, formatInt(fakeHeight)));
+			const diff = await db.get(concatDBKeys(DB_KEY_DIFF_STATE, formatInt(fakeHeight)));
 			const decodedDiff = codec.decode(stateDiffSchema, diff);
 
 			// Assert
@@ -245,15 +245,15 @@ describe('stateStore.finalize.saveDiff', () => {
 			// Act
 			stateStore.finalize(fakeHeight, batch);
 			await batch.write();
-			const diff = await db.get(concatKeys(DB_KEY_DIFF_STATE, formatInt(fakeHeight)));
+			const diff = await db.get(concatDBKeys(DB_KEY_DIFF_STATE, formatInt(fakeHeight)));
 			const decodedDiff = codec.decode(stateDiffSchema, diff);
 
 			// Assert
 			expect(decodedDiff).toStrictEqual({
 				updated: [],
 				created: [
-					concatKeys(DB_KEY_ACCOUNTS_ADDRESS, accounts[0].address),
-					concatKeys(DB_KEY_ACCOUNTS_ADDRESS, accounts[1].address),
+					concatDBKeys(DB_KEY_ACCOUNTS_ADDRESS, accounts[0].address),
+					concatDBKeys(DB_KEY_ACCOUNTS_ADDRESS, accounts[1].address),
 					Buffer.from(`${DB_KEY_CHAIN_STATE}:key1`, 'utf8'),
 					Buffer.from(`${DB_KEY_CHAIN_STATE}:key2`, 'utf8'),
 					Buffer.from(`${DB_KEY_CONSENSUS_STATE}:key3`, 'utf8'),
@@ -292,7 +292,7 @@ describe('stateStore.finalize.saveDiff', () => {
 			const updateBatch = db.batch();
 			stateStore.finalize(updatedFakeHeight, updateBatch);
 			await updateBatch.write();
-			const diff = await db.get(concatKeys(DB_KEY_DIFF_STATE, formatInt(updatedFakeHeight)));
+			const diff = await db.get(concatDBKeys(DB_KEY_DIFF_STATE, formatInt(updatedFakeHeight)));
 			const decodedDiff = codec.decode(stateDiffSchema, diff);
 
 			// Assert
@@ -307,7 +307,7 @@ describe('stateStore.finalize.saveDiff', () => {
 			// Act
 			stateStore.finalize(fakeHeight, batch);
 			await batch.write();
-			const diff = await db.get(concatKeys(DB_KEY_DIFF_STATE, formatInt(fakeHeight)));
+			const diff = await db.get(concatDBKeys(DB_KEY_DIFF_STATE, formatInt(fakeHeight)));
 			const decodedDiff = codec.decode(stateDiffSchema, diff);
 
 			// Assert

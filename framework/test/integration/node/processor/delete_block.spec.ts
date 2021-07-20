@@ -18,7 +18,10 @@ import {
 	stateDiffSchema,
 	Account,
 	Transaction,
-	CONSENSUS_STATE_VALIDATORS_KEY,
+	DB_KEY_CONSENSUS_STATE_VALIDATORS,
+	DB_KEY_DIFF_STATE,
+	DB_KEY_ACCOUNTS_ADDRESS,
+	concatDBKeys,
 } from '@liskhq/lisk-chain';
 import { codec } from '@liskhq/lisk-codec';
 
@@ -89,10 +92,7 @@ describe('Delete block', () => {
 				newBlock = await processEnv.createBlock([transaction]);
 				await processEnv
 					.getBlockchainDB()
-					.put(
-						Buffer.concat([Buffer.from('diff:', 'utf8'), formatInt(newBlock.header.height)]),
-						emptyDiffState,
-					);
+					.put(concatDBKeys(DB_KEY_DIFF_STATE, formatInt(newBlock.header.height)), emptyDiffState);
 				await processEnv.process(newBlock);
 				await processor.deleteLastBlock();
 			});
@@ -128,7 +128,7 @@ describe('Delete block', () => {
 				await expect(
 					processEnv
 						.getBlockchainDB()
-						.get(Buffer.concat([Buffer.from('diff:', 'utf8'), formatInt(newBlock.header.height)])),
+						.get(concatDBKeys(DB_KEY_DIFF_STATE, formatInt(newBlock.header.height))),
 				).rejects.toBeInstanceOf(NotFoundError);
 			});
 		});
@@ -157,10 +157,9 @@ describe('Delete block', () => {
 				await expect(
 					processEnv.getDataAccess().getAccountByAddress(recipientAccount.address),
 				).rejects.toThrow(
-					`Specified key ${Buffer.concat([
-						Buffer.from('accounts:address:', 'utf8'),
-						recipientAccount.address,
-					]).toString('hex')} does not exist`,
+					`Specified key ${concatDBKeys(DB_KEY_ACCOUNTS_ADDRESS, recipientAccount.address).toString(
+						'hex',
+					)} does not exist`,
 				);
 				const revertedGenesisAccount = await processEnv
 					.getDataAccess()
@@ -181,17 +180,17 @@ describe('Delete block', () => {
 				}
 				const consensusStateBefore = await processEnv
 					.getDataAccess()
-					.getConsensusState(CONSENSUS_STATE_VALIDATORS_KEY);
+					.getConsensusState(DB_KEY_CONSENSUS_STATE_VALIDATORS);
 				const newBlock = await processEnv.createBlock([]);
 				await processEnv.process(newBlock);
 				const consensusStateAfter = await processEnv
 					.getDataAccess()
-					.getConsensusState(CONSENSUS_STATE_VALIDATORS_KEY);
+					.getConsensusState(DB_KEY_CONSENSUS_STATE_VALIDATORS);
 				expect(consensusStateBefore).not.toEqual(consensusStateAfter);
 				await processor.deleteLastBlock();
 				const consensusStateReverted = await processEnv
 					.getDataAccess()
-					.getConsensusState(CONSENSUS_STATE_VALIDATORS_KEY);
+					.getConsensusState(DB_KEY_CONSENSUS_STATE_VALIDATORS);
 				expect(consensusStateReverted).toEqual(consensusStateBefore);
 			});
 		});

@@ -15,10 +15,9 @@
 import { dataStructures } from '@liskhq/lisk-utils';
 import { BatchChain } from '@liskhq/lisk-db';
 import { StateDiff } from '../types';
-import { DB_KEY_CONSENSUS_STATE } from '../data_access/constants';
 import { DataAccess } from '../data_access';
-import { CONSENSUS_STATE_FINALIZED_HEIGHT_KEY } from '../constants';
-import { concatKeys } from '../utils';
+import { concatDBKeys } from '../utils';
+import { DB_KEY_CONSENSUS_STATE, DB_KEY_CONSENSUS_STATE_FINALIZED_HEIGHT } from '../db_keys';
 
 export class ConsensusStateStore {
 	private readonly _name = 'ConsensusState';
@@ -61,7 +60,7 @@ export class ConsensusStateStore {
 			return dbValue;
 		}
 		// Finalized height should not be stored as part of this diff because it cannot be undo
-		if (key !== CONSENSUS_STATE_FINALIZED_HEIGHT_KEY) {
+		if (key !== DB_KEY_CONSENSUS_STATE_FINALIZED_HEIGHT) {
 			this._initialValue.set(key, dbValue);
 		}
 		this._data.set(key, dbValue);
@@ -91,12 +90,12 @@ export class ConsensusStateStore {
 		}
 
 		for (const key of Array.from(this._updatedKeys)) {
-			const dbKey = concatKeys(DB_KEY_CONSENSUS_STATE, key);
+			const dbKey = concatDBKeys(DB_KEY_CONSENSUS_STATE, key);
 			const updatedValue = this._data.get(key) as Buffer;
 			batch.put(dbKey, updatedValue);
 
 			// finalized height should never be saved to diff, since it will not changed
-			if (key === CONSENSUS_STATE_FINALIZED_HEIGHT_KEY) {
+			if (key.equals(DB_KEY_CONSENSUS_STATE_FINALIZED_HEIGHT)) {
 				continue;
 			}
 

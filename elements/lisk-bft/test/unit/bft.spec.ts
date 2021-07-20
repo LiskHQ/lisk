@@ -17,8 +17,8 @@ import { getAddressFromPublicKey, getRandomBytes } from '@liskhq/lisk-cryptograp
 import {
 	Chain,
 	BlockHeader,
-	CONSENSUS_STATE_FINALIZED_HEIGHT_KEY,
-	CONSENSUS_STATE_VALIDATORS_KEY,
+	DB_KEY_CONSENSUS_STATE_VALIDATORS,
+	DB_KEY_CONSENSUS_STATE_FINALIZED_HEIGHT,
 	validatorsSchema,
 	StateStore,
 	testing,
@@ -114,13 +114,13 @@ describe('bft', () => {
 				}) as unknown) as StateStore;
 
 				await stateStore.consensus.set(
-					CONSENSUS_STATE_FINALIZED_HEIGHT_KEY,
+					DB_KEY_CONSENSUS_STATE_FINALIZED_HEIGHT,
 					codec.encode(BFTFinalizedHeightCodecSchema, {
 						finalizedHeight,
 					}),
 				);
 				await stateStore.consensus.set(
-					CONSENSUS_STATE_VALIDATORS_KEY,
+					DB_KEY_CONSENSUS_STATE_VALIDATORS,
 					codec.encode(validatorsSchema, {
 						validators: [
 							{ address: getRandomBytes(20), isConsensusParticipant: true, minActiveHeight: 104 },
@@ -155,13 +155,13 @@ describe('bft', () => {
 					lastBlockHeaders: blocks,
 				}) as unknown) as StateStore;
 				await stateStore.consensus.set(
-					CONSENSUS_STATE_FINALIZED_HEIGHT_KEY,
+					DB_KEY_CONSENSUS_STATE_FINALIZED_HEIGHT,
 					codec.encode(BFTFinalizedHeightCodecSchema, {
 						finalizedHeight: 1,
 					}),
 				);
 				await stateStore.consensus.set(
-					CONSENSUS_STATE_VALIDATORS_KEY,
+					DB_KEY_CONSENSUS_STATE_VALIDATORS,
 					codec.encode(validatorsSchema, {
 						validators: blocks.map(b => ({
 							address: getAddressFromPublicKey(b.generatorPublicKey),
@@ -242,7 +242,7 @@ describe('bft', () => {
 				}) as unknown) as StateStore;
 
 				await stateStore.consensus.set(
-					CONSENSUS_STATE_FINALIZED_HEIGHT_KEY,
+					DB_KEY_CONSENSUS_STATE_FINALIZED_HEIGHT,
 					codec.encode(BFTFinalizedHeightCodecSchema, {
 						finalizedHeight: lastFinalizedHeight,
 					}),
@@ -252,7 +252,7 @@ describe('bft', () => {
 					codec.encode(BFTVotingLedgerSchema, validatorLedger),
 				);
 				await stateStore.consensus.set(
-					CONSENSUS_STATE_VALIDATORS_KEY,
+					DB_KEY_CONSENSUS_STATE_VALIDATORS,
 					codec.encode(validatorsSchema, {
 						validators: [
 							{
@@ -272,7 +272,7 @@ describe('bft', () => {
 				it('should update the latest finalized height to storage', async () => {
 					await bft.applyBlockHeader(block1, stateStore);
 					const finalizedHeightBuffer =
-						(await stateStore.consensus.get(CONSENSUS_STATE_FINALIZED_HEIGHT_KEY)) ??
+						(await stateStore.consensus.get(DB_KEY_CONSENSUS_STATE_FINALIZED_HEIGHT)) ??
 						Buffer.from('00');
 
 					const { finalizedHeight } = codec.decode<BFTPersistedValues>(
@@ -295,13 +295,13 @@ describe('bft', () => {
 					lastBlockHeaders: blocks.filter(b => b.height >= minHeight),
 				}) as unknown) as StateStore;
 				await store.consensus.set(
-					CONSENSUS_STATE_FINALIZED_HEIGHT_KEY,
+					DB_KEY_CONSENSUS_STATE_FINALIZED_HEIGHT,
 					codec.encode(BFTFinalizedHeightCodecSchema, {
 						finalizedHeight: 1,
 					}),
 				);
 				await store.consensus.set(
-					CONSENSUS_STATE_VALIDATORS_KEY,
+					DB_KEY_CONSENSUS_STATE_VALIDATORS,
 					codec.encode(validatorsSchema, {
 						validators: blocks.map(b => ({
 							address: getAddressFromPublicKey(b.generatorPublicKey),

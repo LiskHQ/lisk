@@ -33,8 +33,9 @@ import { Block, BlockHeader, GenesisBlock, Validator } from '../../src/types';
 import { getTransaction } from '../utils/transaction';
 import { validatorsSchema } from '../../src/schema';
 import { createStateStore } from '../utils/state_store';
-import { CONSENSUS_STATE_VALIDATORS_KEY } from '../../src/constants';
+import { DB_KEY_CONSENSUS_STATE_VALIDATORS, DB_KEY_CONSENSUS_STATE } from '../../src/db_keys';
 import { Transaction } from '../../src';
+import { concatDBKeys } from '../../src/utils/buffer_keys';
 
 jest.mock('events');
 jest.mock('@liskhq/lisk-db');
@@ -413,7 +414,7 @@ describe('chain/process block', () => {
 					validators: [{ address: getRandomBytes(20) }],
 				});
 				when(db.get)
-					.calledWith(Buffer.from('consensus:validators', 'utf8'))
+					.calledWith(concatDBKeys(DB_KEY_CONSENSUS_STATE, DB_KEY_CONSENSUS_STATE_VALIDATORS))
 					.mockResolvedValue(validatorBuffer as never);
 
 				// Act & assert
@@ -434,7 +435,7 @@ describe('chain/process block', () => {
 					],
 				});
 				when(db.get)
-					.calledWith(Buffer.from('consensus:validators', 'utf8'))
+					.calledWith(concatDBKeys(DB_KEY_CONSENSUS_STATE, DB_KEY_CONSENSUS_STATE_VALIDATORS))
 					.mockResolvedValue(validatorBuffer as never);
 
 				// Act & assert
@@ -476,7 +477,7 @@ describe('chain/process block', () => {
 					validators: [{ address: getAddressFromPublicKey(block.header.generatorPublicKey) }],
 				});
 				when(db.get)
-					.calledWith(Buffer.from('consensus:validators', 'utf8'))
+					.calledWith(concatDBKeys(DB_KEY_CONSENSUS_STATE, DB_KEY_CONSENSUS_STATE_VALIDATORS))
 					.mockResolvedValue(validatorBuffer as never);
 
 				const dataAccess = new DataAccess({
@@ -509,7 +510,7 @@ describe('chain/process block', () => {
 					validators: [{ address: getAddressFromPublicKey(block.header.generatorPublicKey) }],
 				});
 				when(db.get)
-					.calledWith(Buffer.from('consensus:validators', 'utf8'))
+					.calledWith(concatDBKeys(DB_KEY_CONSENSUS_STATE, DB_KEY_CONSENSUS_STATE_VALIDATORS))
 					.mockResolvedValue(validatorBuffer as never);
 
 				// Act & assert
@@ -1097,7 +1098,7 @@ describe('chain/process block', () => {
 
 		it('should store all the accounts in the genesis block', async () => {
 			await chainInstance.applyGenesisBlock(genesisBlock, stateStore);
-			const validatorsBuffer = await stateStore.consensus.get(CONSENSUS_STATE_VALIDATORS_KEY);
+			const validatorsBuffer = await stateStore.consensus.get(DB_KEY_CONSENSUS_STATE_VALIDATORS);
 			const { validators } = codec.decode<{ validators: Validator[] }>(
 				validatorsSchema,
 				validatorsBuffer as Buffer,

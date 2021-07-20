@@ -24,8 +24,8 @@ import {
 	defaultAccount,
 } from '../../utils/account';
 import { defaultNetworkIdentifier, registeredBlockHeaders } from '../../utils/block';
-import { DB_KEY_ACCOUNTS_ADDRESS } from '../../../src/data_access/constants';
-import { concatKeys } from '../../../src/utils/buffer_keys';
+import { DB_KEY_ACCOUNTS_ADDRESS } from '../../../src/db_keys';
+import { concatDBKeys } from '../../../src/utils/buffer_keys';
 
 jest.mock('@liskhq/lisk-db');
 
@@ -72,11 +72,11 @@ describe('state store / account', () => {
 		});
 		// Setting this as default behavior throws UnhandledPromiseRejection, so it is specifying the non-existing account
 		const dbGetMock = when(db.get)
-			.calledWith(concatKeys(DB_KEY_ACCOUNTS_ADDRESS, Buffer.from('123L', 'utf8')))
+			.calledWith(concatDBKeys(DB_KEY_ACCOUNTS_ADDRESS, Buffer.from('123L', 'utf8')))
 			.mockRejectedValue(new NotFoundError('Data not found') as never);
 		for (const data of accountInDB) {
 			dbGetMock
-				.calledWith(concatKeys(DB_KEY_ACCOUNTS_ADDRESS, data.key))
+				.calledWith(concatDBKeys(DB_KEY_ACCOUNTS_ADDRESS, data.key))
 				.mockResolvedValue(data.value as never);
 		}
 		for (const account of stateStoreAccounts) {
@@ -101,7 +101,9 @@ describe('state store / account', () => {
 			// Act
 			await stateStore.account.get(accountInDB[2].key);
 			// Assert
-			expect(db.get).toHaveBeenCalledWith(concatKeys(DB_KEY_ACCOUNTS_ADDRESS, accountInDB[2].key));
+			expect(db.get).toHaveBeenCalledWith(
+				concatDBKeys(DB_KEY_ACCOUNTS_ADDRESS, accountInDB[2].key),
+			);
 		});
 
 		it('should throw an error if not exist', async () => {
@@ -128,7 +130,9 @@ describe('state store / account', () => {
 			// Act
 			await stateStore.account.get(accountInDB[2].key);
 			// Assert
-			expect(db.get).toHaveBeenCalledWith(concatKeys(DB_KEY_ACCOUNTS_ADDRESS, accountInDB[2].key));
+			expect(db.get).toHaveBeenCalledWith(
+				concatDBKeys(DB_KEY_ACCOUNTS_ADDRESS, accountInDB[2].key),
+			);
 		});
 
 		it('should get the default account', async () => {
@@ -179,7 +183,7 @@ describe('state store / account', () => {
 			// Arrange
 			const inmemoryAccount = createFakeDefaultAccount({ token: { balance: BigInt(200000000) } });
 			when(db.get)
-				.calledWith(concatKeys(DB_KEY_ACCOUNTS_ADDRESS, inmemoryAccount.address))
+				.calledWith(concatDBKeys(DB_KEY_ACCOUNTS_ADDRESS, inmemoryAccount.address))
 				.mockRejectedValue(new NotFoundError('Data not found') as never);
 			await stateStore.account.set(inmemoryAccount.address, inmemoryAccount);
 			// Act
@@ -230,7 +234,7 @@ describe('state store / account', () => {
 			stateStore.account.finalize(batchStub);
 
 			expect(batchStub.put).toHaveBeenCalledWith(
-				concatKeys(DB_KEY_ACCOUNTS_ADDRESS, updatedAccount.address),
+				concatDBKeys(DB_KEY_ACCOUNTS_ADDRESS, updatedAccount.address),
 				expect.any(Buffer),
 			);
 		});
@@ -255,7 +259,7 @@ describe('state store / account', () => {
 			expect(stateDiff).toStrictEqual({
 				updated: [
 					{
-						key: concatKeys(DB_KEY_ACCOUNTS_ADDRESS, existingAccount.address),
+						key: concatDBKeys(DB_KEY_ACCOUNTS_ADDRESS, existingAccount.address),
 						value: originalBytes,
 					},
 				],
@@ -274,8 +278,8 @@ describe('state store / account', () => {
 			expect(stateDiff).toStrictEqual({
 				updated: [],
 				created: [
-					concatKeys(DB_KEY_ACCOUNTS_ADDRESS, account1.address),
-					concatKeys(DB_KEY_ACCOUNTS_ADDRESS, account2.address),
+					concatDBKeys(DB_KEY_ACCOUNTS_ADDRESS, account1.address),
+					concatDBKeys(DB_KEY_ACCOUNTS_ADDRESS, account2.address),
 				],
 				deleted: [],
 			});
@@ -289,7 +293,7 @@ describe('state store / account', () => {
 				created: [],
 				deleted: [
 					{
-						key: concatKeys(DB_KEY_ACCOUNTS_ADDRESS, accountOnlyInDB.address),
+						key: concatDBKeys(DB_KEY_ACCOUNTS_ADDRESS, accountOnlyInDB.address),
 						value: encodeDefaultAccount(accountOnlyInDB),
 					},
 				],
